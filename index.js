@@ -82,7 +82,37 @@ const displayTable = (table) => {
     console.log(table);
 }
 
-const updateTable = (match,...tableIn) => {
+const updateTable = (match,tableIn) => {
+    const homeTeam = table.findIndex((row) => row.team === match.homeTeam);
+    const awayTeam = table.findIndex((row) => row.team === match.awayTeam);
+    
+    tableIn[homeTeam].gamesPlayed += 1;
+    tableIn[awayTeam].gamesPlayed += 1;
+    
+    if(match.homeGoals > match.awayGoals){
+        tableIn[homeTeam].gamesWon += 1;
+        tableIn[awayTeam].gamesLost += 1;
+        tableIn[homeTeam].points += 3;
+    }
+    else if(match.awayGoals > match.homeGoals){
+        tableIn[awayTeam].gamesWon += 1;
+        tableIn[homeTeam].gamesLost += 1;
+        tableIn[awayTeam].points += 3;
+    }
+    else{
+        tableIn[homeTeam].gamesDrawn += 1;
+        tableIn[awayTeam].gamesDrawn += 1;
+        tableIn[homeTeam].points += 1;
+        tableIn[awayTeam].points += 1;
+    }
+
+    tableIn[homeTeam].goalsFor += match.homeGoals;
+    tableIn[awayTeam].goalsFor += match.awayGoals;
+    tableIn[homeTeam].goalsAgainst += match.awayGoals;
+    tableIn[awayTeam].goalsAgainst += match.homeGoals;
+    tableIn[homeTeam].goalDifference = tableIn[homeTeam].goalsFor - tableIn[homeTeam].goalsAgainst;
+    tableIn[awayTeam].goalDifference = tableIn[awayTeam].goalsFor - tableIn[awayTeam].goalsAgainst;
+
     return tableIn;
 }
 
