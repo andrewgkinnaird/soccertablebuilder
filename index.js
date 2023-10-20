@@ -75,9 +75,8 @@ const initTable = () => {
     clearTable();
 
     tableRows.forEach((row) => {
-        table.push(row);
+        table.push(structuredClone(row));
     })
-    displayTable();
 }
 
 const clearTable = () => {
@@ -87,7 +86,7 @@ const clearTable = () => {
 }
 
 const displayTable = () => {
-    console.log(table);
+    console.table(table);
 }
 
 const updateTable = (match) => {
@@ -122,11 +121,11 @@ const updateTable = (match) => {
     table[awayTeam].goalDifference = table[awayTeam].goalsFor - table[awayTeam].goalsAgainst;
 
     sortTable();
-    return table;
+    displayTable();
 }
 
 const sortTable = () => {
-    table.sort((a,b) => b.points - a.points);
+    table.sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor);
     table.forEach((row,index) => row.tablePosition = index + 1 );
 } 
 
