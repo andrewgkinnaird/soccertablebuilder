@@ -72,49 +72,63 @@ const getTable = () => {
 }
 
 const initTable = () => {
+    clearTable();
+
     tableRows.forEach((row) => {
         table.push(row);
     })
     displayTable();
 }
 
-const displayTable = (table) => {
+const clearTable = () => {
+    while(table.length > 0){
+        table.pop();
+    }
+}
+
+const displayTable = () => {
     console.log(table);
 }
 
-const updateTable = (match,tableIn) => {
+const updateTable = (match) => {
     const homeTeam = table.findIndex((row) => row.team === match.homeTeam);
     const awayTeam = table.findIndex((row) => row.team === match.awayTeam);
     
-    tableIn[homeTeam].gamesPlayed += 1;
-    tableIn[awayTeam].gamesPlayed += 1;
+    table[homeTeam].gamesPlayed += 1;
+    table[awayTeam].gamesPlayed += 1;
     
     if(match.homeGoals > match.awayGoals){
-        tableIn[homeTeam].gamesWon += 1;
-        tableIn[awayTeam].gamesLost += 1;
-        tableIn[homeTeam].points += 3;
+        table[homeTeam].gamesWon += 1;
+        table[awayTeam].gamesLost += 1;
+        table[homeTeam].points += 3;
     }
     else if(match.awayGoals > match.homeGoals){
-        tableIn[awayTeam].gamesWon += 1;
-        tableIn[homeTeam].gamesLost += 1;
-        tableIn[awayTeam].points += 3;
+        table[awayTeam].gamesWon += 1;
+        table[homeTeam].gamesLost += 1;
+        table[awayTeam].points += 3;
     }
     else{
-        tableIn[homeTeam].gamesDrawn += 1;
-        tableIn[awayTeam].gamesDrawn += 1;
-        tableIn[homeTeam].points += 1;
-        tableIn[awayTeam].points += 1;
+        table[homeTeam].gamesDrawn += 1;
+        table[awayTeam].gamesDrawn += 1;
+        table[homeTeam].points += 1;
+        table[awayTeam].points += 1;
     }
 
-    tableIn[homeTeam].goalsFor += match.homeGoals;
-    tableIn[awayTeam].goalsFor += match.awayGoals;
-    tableIn[homeTeam].goalsAgainst += match.awayGoals;
-    tableIn[awayTeam].goalsAgainst += match.homeGoals;
-    tableIn[homeTeam].goalDifference = tableIn[homeTeam].goalsFor - tableIn[homeTeam].goalsAgainst;
-    tableIn[awayTeam].goalDifference = tableIn[awayTeam].goalsFor - tableIn[awayTeam].goalsAgainst;
+    table[homeTeam].goalsFor += match.homeGoals;
+    table[awayTeam].goalsFor += match.awayGoals;
+    table[homeTeam].goalsAgainst += match.awayGoals;
+    table[awayTeam].goalsAgainst += match.homeGoals;
+    table[homeTeam].goalDifference = table[homeTeam].goalsFor - table[homeTeam].goalsAgainst;
+    table[awayTeam].goalDifference = table[awayTeam].goalsFor - table[awayTeam].goalsAgainst;
 
-    return tableIn;
+    sortTable();
+    return table;
 }
+
+const sortTable = () => {
+    table.sort((a,b) => b.points - a.points);
+    table.forEach((row,index) => row.tablePosition = index + 1 );
+} 
 
 exports.initTable = initTable;
 exports.getTable = getTable;
