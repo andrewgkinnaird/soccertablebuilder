@@ -1,135 +1,241 @@
 
 
-
-
-const table = [];
-
-const tableRows = [
-    {
-        tablePosition:1,
-        team:'England',
-        gamesPlayed:6,
-        gamesWon:5,
-        gamesDrawn:1,
-        gamesLost:0,
-        goalsFor:19,
-        goalsAgainst:3,
-        goalDifference:16,
-        points:16
-    },
-    {
-        tablePosition:2,
-        team:'Ukraine',
-        gamesPlayed:7,
-        gamesWon:4,
-        gamesDrawn:1,
-        gamesLost:2,
-        goalsFor:11,
-        goalsAgainst:8,
-        goalDifference:3,
-        points:13
-    },
-    {
-        tablePosition:3,
-        team:'Italy',
-        gamesPlayed:6,
-        gamesWon:3,
-        gamesDrawn:1,
-        gamesLost:2,
-        goalsFor:11,
-        goalsAgainst:7,
-        goalDifference:4,
-        points:10
-    },
-    {
-        tablePosition:4,
-        team:'North Macedonia',
-        gamesPlayed:6,
-        gamesWon:2,
-        gamesDrawn:1,
-        gamesLost:3,
-        goalsFor:7,
-        goalsAgainst:14,
-        goalDifference:-7,
-        points:7
-    },
-    {
-        tablePosition:5,
-        team:'Malta',
-        gamesPlayed:7,
+class Table {
+    playedMatches = [];
+    matches = [];
+    sortRules = [];
+    tableRows = [];
+    tableRowTemplate = {
+        team:'',
+        gamesPlayed:0,
         gamesWon:0,
         gamesDrawn:0,
-        gamesLost:7,
-        goalsFor:2,
-        goalsAgainst:18,
-        goalDifference:-16,
+        gamesLost:0,
+        goalsFor:0,
+        goalsAgainst:0,
+        goalDifference:0,
         points:0
     }
-]
 
-const getTable = () => {
-    return table;
-}
+    teams = [];
 
-const initTable = () => {
-    clearTable();
-
-    tableRows.forEach((row) => {
-        table.push(structuredClone(row));
-    })
-}
-
-const clearTable = () => {
-    while(table.length > 0){
-        table.pop();
+    constructor(teams,matches,rules){
+        this.teams = teams;
+        this.matches = matches;
     }
-}
 
-const displayTable = () => {
-    console.table(table);
-}
+    getTable(){
+        return this;
+    }
 
-const updateTable = (match) => {
-    const homeTeam = table.findIndex((row) => row.team === match.homeTeam);
-    const awayTeam = table.findIndex((row) => row.team === match.awayTeam);
+    clearTable(){
+        this.playedMatches = [];
+        if(!this.tableRows)
+            return;
+
+        while(this.tableRows.length > 0){
+            this.tableRows.pop();
+        }
+        
+    }
+
+    initTable(){
+        this.clearTable();
+        
+        this.teams.forEach((team) => {
+            const newRow = structuredClone(this.tableRowTemplate);
+            newRow.team = team;
+            this.tableRows.push(newRow);
+        })
+
+        this.matches.forEach((match) => {
+            this.updateTable(match);
+        })
+    }
+
+    sort(){
+        let sortedIndices = [];
+        let sortedTable = [];
+
+        this.tableRows.sort((a,b) => b.points - a.points); 
+        
+        let tiedIndices = this.findTeamsTiedOnSamePoints(this);
+
+        tiedIndices.forEach((tie) => {
+            if(tie.length === 1)
+                    sortedIndices = sortedIndices.concat(tie);
+            else
+                    sortedIndices = sortedIndices.concat(this.handleH2H(tie)); //there's an infinite loop here
+        });
+
+        sortedIndices.forEach((index) => {
+            sortedTable.push(this.tableRows[index]);
+        })
+
+        this.tableRows = sortedTable;
+        this.displayTable();
+        
+    }
+
+    sortWithoutH2H = () => {
+        return this.tableRows.sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor)
+    }
+
     
-    table[homeTeam].gamesPlayed += 1;
-    table[awayTeam].gamesPlayed += 1;
+
+    updateTable = (match) => {
+        const homeTeam = this.tableRows.findIndex((row) => row.team === match.homeTeam);
+        const awayTeam = this.tableRows.findIndex((row) => row.team === match.awayTeam);
+        
+        this.tableRows[homeTeam].gamesPlayed += 1;
+        this.tableRows[awayTeam].gamesPlayed += 1;
+        
+        if(match.homeGoals > match.awayGoals){
+            this.tableRows[homeTeam].gamesWon += 1;
+            this.tableRows[awayTeam].gamesLost += 1;
+            this.tableRows[homeTeam].points += 3;
+        }
+        else if(match.awayGoals > match.homeGoals){
+            this.tableRows[awayTeam].gamesWon += 1;
+            this.tableRows[homeTeam].gamesLost += 1;
+            this.tableRows[awayTeam].points += 3;
+        }
+        else{
+            this.tableRows[homeTeam].gamesDrawn += 1;
+            this.tableRows[awayTeam].gamesDrawn += 1;
+            this.tableRows[homeTeam].points += 1;
+            this.tableRows[awayTeam].points += 1;
+        }
     
-    if(match.homeGoals > match.awayGoals){
-        table[homeTeam].gamesWon += 1;
-        table[awayTeam].gamesLost += 1;
-        table[homeTeam].points += 3;
-    }
-    else if(match.awayGoals > match.homeGoals){
-        table[awayTeam].gamesWon += 1;
-        table[homeTeam].gamesLost += 1;
-        table[awayTeam].points += 3;
-    }
-    else{
-        table[homeTeam].gamesDrawn += 1;
-        table[awayTeam].gamesDrawn += 1;
-        table[homeTeam].points += 1;
-        table[awayTeam].points += 1;
+        this.tableRows[homeTeam].goalsFor += match.homeGoals;
+        this.tableRows[awayTeam].goalsFor += match.awayGoals;
+        this.tableRows[homeTeam].goalsAgainst += match.awayGoals;
+        this.tableRows[awayTeam].goalsAgainst += match.homeGoals;
+        this.tableRows[homeTeam].goalDifference = this.tableRows[homeTeam].goalsFor - this.tableRows[homeTeam].goalsAgainst;
+        this.tableRows[awayTeam].goalDifference = this.tableRows[awayTeam].goalsFor - this.tableRows[awayTeam].goalsAgainst;
+    
+        this.playedMatches.push(match);
+        
     }
 
-    table[homeTeam].goalsFor += match.homeGoals;
-    table[awayTeam].goalsFor += match.awayGoals;
-    table[homeTeam].goalsAgainst += match.awayGoals;
-    table[awayTeam].goalsAgainst += match.homeGoals;
-    table[homeTeam].goalDifference = table[homeTeam].goalsFor - table[homeTeam].goalsAgainst;
-    table[awayTeam].goalDifference = table[awayTeam].goalsFor - table[awayTeam].goalsAgainst;
+    findTeamsTiedOnSamePoints = (table,tieBreakers=['points']) => {
+        let ties = [];
+        let temp = [0];
+        
+        const isTied = (i) => {
+            let rowA = table.tableRows[i];
+            let rowB = table.tableRows[i-1];
+            let tied = true;
 
-    sortTable();
-    displayTable();
+            for(let j=0; j<tieBreakers.length;j++){
+                if(!(rowA[tieBreakers[j]] === rowB[tieBreakers[j]])){
+                    return false;
+                }
+            }
+                
+                    
+           
+
+            return true;
+        }
+
+        //find teams tied on same points
+        for(let i=1; i<table.tableRows.length; i++){
+            
+            while(i < table.tableRows.length && isTied(i)){//table.tableRows[i].points === table.tableRows[i-1].points){    //
+                temp.push(i);
+                i++;
+            }
+            
+            
+            ties.push(temp);
+            temp = [i];
+            
+            if(!temp.includes[i] && i === table.tableRows.length-1)
+                ties.push([i])
+        }
+    
+        if(ties.length > 0)
+            return ties;
+        else
+            return [];
+    }
+
+    findTeamsTiedOnSamePointsGoalDiffAndGoalsFor = (table) => {
+        let ties = [];
+        let temp = [0];
+        
+        //find teams tied on same points
+        for(let i=1; i<table.tableRows.length; i++){
+            
+            while(i < table.tableRows.length && table.tableRows[i].points === table.tableRows[i-1].points){
+                temp.push(i);
+                i++;
+            }
+            
+            
+            ties.push(temp);
+            temp = [i];
+            
+            if(!temp.includes[i] && i === table.tableRows.length-1)
+                ties.push([i])
+        }
+    
+        if(ties.length > 0)
+            return ties;
+        else
+            return [];
+    }
+
+    handleH2H = (indices) => {
+        
+        const subGroupTeams = indices.map((index) => this.tableRows[index].team);
+        const subGroupMatches = this.playedMatches.filter((match) => subGroupTeams.includes(match.homeTeam) && subGroupTeams.includes(match.awayTeam));
+        if(subGroupMatches.length === 0)
+            return indices;
+       
+        const subGroup = new Table(subGroupTeams,subGroupMatches);
+        
+        subGroup.initTable();
+        subGroup.sortWithoutH2H();
+        subGroup.displayTable();
+
+        let subGroupSortedIndices = [];
+        let teamsTiedAfterH2H = [];
+
+        subGroup.tableRows.forEach((row) => {
+            subGroupSortedIndices.push(indices[subGroupTeams.findIndex((team) => row.team === team)]);
+        } )
+        
+        teamsTiedAfterH2H = this.findTeamsTiedOnSamePoints(subGroup,['points','goalDifference','goalsFor']);
+        
+        if(teamsTiedAfterH2H.length === subGroupSortedIndices.length)
+            return subGroupSortedIndices;
+        else 
+            return subGroupSortedIndices.sort((a,b) => this.tableRows[b].goalDifference - this.tableRows[a].goalDifference || this.tableRows[b].goalsFor - this.tableRows[a].goalsFor);
+    }
+
+
+
+    displayTable = () => {
+        console.table(this.tableRows);
+    }
+
+    setMatches(matches){
+        this.matches = matches;
+    }
+
+    getTablePosition(team){
+        const index = this.tableRows.findIndex((row) => row.team === team );
+        return  index + 1;
+    }
+
 }
 
-const sortTable = () => {
-    table.sort((a,b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor);
-    table.forEach((row,index) => row.tablePosition = index + 1 );
-} 
 
-exports.initTable = initTable;
-exports.getTable = getTable;
-exports.displayTable = displayTable;
-exports.updateTable = updateTable;
+
+
+exports.Table = Table;
+exports.exportedForTesting = {
+  
+};

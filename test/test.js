@@ -1,13 +1,34 @@
 const expect = require('chai').expect;
-const {initTable,getTable,displayTable, updateTable} = require('../index');
+const {initTable,getTable,displayTable, updateTable, exportedForTesting, Table} = require('../index');
+
+const teams = ['England','Italy','North Macedonia','Ukraine','Malta'];
+const matches = [
+    {homeTeam:'Italy',awayTeam:'England',date:new Date("2023-03-23T20:45:00"),homeGoals:1,awayGoals:2},
+    {homeTeam:'North Macedonia',awayTeam:'Malta',date:new Date("2023-03-23T20:45:00"),homeGoals:2,awayGoals:1},
+    {homeTeam:'England',awayTeam:'Ukraine',date:new Date("2023-03-26T18:00:00"),homeGoals:2,awayGoals:0},
+    {homeTeam:'Malta',awayTeam:'Italy',date:new Date("2023-03-26T20:45:00"),homeGoals:0,awayGoals:2},
+    {homeTeam:'Malta',awayTeam:'England',date:new Date("2023-6-16T20:45:00"),homeGoals:0,awayGoals:4},
+    {homeTeam:'North Macedonia',awayTeam:'Ukraine',date:new Date("2023-6-16T20:45:00"),homeGoals:2,awayGoals:3},
+    {homeTeam:'Ukraine',awayTeam:'Malta',date:new Date("2023-6-19T18:00:00"),homeGoals:1,awayGoals:0},
+    {homeTeam:'England',awayTeam:'North Macedonia',date:new Date("2023-6-19T20:45:00"),homeGoals:7,awayGoals:0},
+    {homeTeam:'Ukraine',awayTeam:'England',date:new Date("2023-9-9T18:00:00"),homeGoals:1,awayGoals:1},
+    {homeTeam:'North Macedonia',awayTeam:'Italy',date:new Date("2023-9-9T20:45:00"),homeGoals:1,awayGoals:1},
+    {homeTeam:'Italy',awayTeam:'Ukraine',date:new Date("2023-9-12T20:45:00"),homeGoals:2,awayGoals:1},
+    {homeTeam:'Malta',awayTeam:'North Macedonia',date:new Date("2023-9-12T20:45:00"),homeGoals:0,awayGoals:2},
+    {homeTeam:'Ukraine',awayTeam:'North Macedonia',date:new Date("2023-14-10T15:00:00"),homeGoals:2,awayGoals:0},
+    {homeTeam:'Italy',awayTeam:'Malta',date:new Date("2023-14-10T20:45:00"),homeGoals:4,awayGoals:0},
+    {homeTeam:'England',awayTeam:'Italy',date:new Date("2023-17-10T20:45:00"),homeGoals:3,awayGoals:1},
+    {homeTeam:'Malta',awayTeam:'Ukraine',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:3}
+]   
 
 describe('adding matches', () => {
-    it('should update table stats when supplied a new match score', () => {
-        initTable();
-        let table = getTable();
+
+    it('should update table object when supplied a new match score', () => {
+        const table = new Table(teams,matches);
+        table.initTable();
+
         const match = {homeTeam:'England',awayTeam:'Ukraine', homeGoals:1, awayGoals:0};
-        
-        updateTable(match);
+        table.updateTable(match);
 
         /*
         ┌─────────┬───────────────┬───────────────────┬─────────────┬──────────┬────────────┬───────────┬──────────┬──────────────┬────────────────┬────────┐
@@ -18,9 +39,8 @@ describe('adding matches', () => {
 
         */
 
-        table = getTable();
-        const newEnglandRow = table.find((row) => row.team === 'England');
-        const newUkraineRow = table.find((row) => row.team === 'Ukraine');
+        const newEnglandRow = table.tableRows.find((row) => row.team === 'England');
+        const newUkraineRow = table.tableRows.find((row) => row.team === 'Ukraine');
         
         expect(newEnglandRow.gamesPlayed).to.be.equal(7);
         expect(newEnglandRow.gamesWon).to.be.equal(6);
@@ -39,16 +59,36 @@ describe('adding matches', () => {
         expect(newUkraineRow.goalsAgainst).to.be.equal(9);
         expect(newUkraineRow.goalDifference).to.be.equal(2);
         expect(newUkraineRow.points).to.be.equal(13);
-    
-    })
+    });
 
+  
+
+    
+
+    it('should update table positions when a team attains the same points as another, and beats them on H2H', () => {
+        const table = new Table(teams,matches);
+        table.initTable();
+
+        const match = {homeTeam:'Italy',awayTeam:'North Macedonia', homeGoals:0, awayGoals:1};
+        table.updateTable(match); 
+        table.sort();
+        const newItalyRow = table.tableRows.find((row) => row.team === 'Italy');
+        const newMacedoniaRow = table.tableRows.find((row) => row.team === 'North Macedonia');
+        
+        expect(newItalyRow.points).to.be.equal(10);
+        expect(newMacedoniaRow.points).to.be.equal(10);
+        expect(table.getTablePosition('North Macedonia')).to.be.equal(3);
+        expect(table.getTablePosition('Italy')).to.be.equal(4);
+    });
+    
     it('should update table positions when a team overtakes another based on points', () => {
-        initTable();
-        let table = getTable();
+        const table = new Table(teams,matches);
+        table.initTable();
         const match = {homeTeam:'England',awayTeam:'Ukraine', homeGoals:1, awayGoals:2};
-        updateTable(match);
-        updateTable(match);
-        updateTable(match);
+        table.updateTable(match);
+        table.updateTable(match);
+        table.updateTable(match);
+        table.sort();
         
         /*
         ┌─────────┬───────────────┬───────────────────┬─────────────┬──────────┬────────────┬───────────┬──────────┬──────────────┬────────────────┬────────┐
@@ -59,72 +99,50 @@ describe('adding matches', () => {
 
         */
 
-        table = getTable();
-        const newEnglandRow = table.find((row) => row.team === 'England');
-        const newUkraineRow = table.find((row) => row.team === 'Ukraine');
-        expect(newEnglandRow.points).to.be.equal(16);
-        expect(newEnglandRow.tablePosition).to.be.equal(2);
-        expect(newUkraineRow.points).to.be.equal(22);
-        expect(newUkraineRow.tablePosition).to.be.equal(1);
-
-    })
-
-    it('should update table positions when a team overtakes another based on goal difference and points are equal', () => {
-        initTable();
-        let table = getTable();
-        const match = {homeTeam:'England',awayTeam:'Ukraine', homeGoals:1, awayGoals:8};
-        updateTable(match);
         
-        /*
-        ┌─────────┬───────────────┬───────────────────┬─────────────┬──────────┬────────────┬───────────┬──────────┬──────────────┬────────────────┬────────┐
-        │ (index) │ tablePosition │       team        │ gamesPlayed │ gamesWon │ gamesDrawn │ gamesLost │ goalsFor │ goalsAgainst │ goalDifference │ points │
-        ├─────────┼───────────────┼───────────────────┼─────────────┼──────────┼────────────┼───────────┼──────────┼──────────────┼────────────────┼────────┤
-        │    0    │       1       │     'Ukraine'     │      8      │    5     │     1      │     2     │    19    │      9       │       10       │   16   │
-        │    1    │       2       │     'England'     │      7      │    5     │     1      │     1     │    20    │      11      │       9        │   16   │
-
-        */
-
-        table = getTable();
-
-        const newEnglandRow = table.find((row) => row.team === 'England');
-        const newUkraineRow = table.find((row) => row.team === 'Ukraine');
-        expect(newUkraineRow.goalDifference).to.be.greaterThan(newEnglandRow.goalDifference)
-        expect(newEnglandRow.tablePosition).to.be.equal(2);
-        expect(newUkraineRow.tablePosition).to.be.equal(1);
+        const newEnglandRow = table.tableRows.find((row) => row.team === 'England');
+        const newUkraineRow = table.tableRows.find((row) => row.team === 'Ukraine');
+        expect(newEnglandRow.points).to.be.equal(16);
+        expect(table.getTablePosition('England')).to.be.equal(2);
+        expect(newUkraineRow.points).to.be.equal(22);
+        expect(table.getTablePosition('Ukraine')).to.be.equal(1);
 
     })
 
-    it('should update table positions when a team overtakes another based on goals for and points/goal difference are equal', () => {
-        initTable();
-        let table = getTable();
-        const match1 = {homeTeam:'England',awayTeam:'Ukraine', homeGoals:2, awayGoals:8};
-        updateTable(match1);
-        const match2 = {homeTeam:'England',awayTeam:'Italy', homeGoals:0, awayGoals:1};
-        updateTable(match2);
+    
+
+    it('should update table positions when a team overtakes another based on goals for and H2H/points/goal difference are equal', () => {
+        const table = new Table(teams,matches);
+        table.initTable();
+        const match1 = {homeTeam:'England',awayTeam:'Ukraine', homeGoals:0, awayGoals:2}; // H2H is now equal
+        table.updateTable(match1);
+        const match2 = {homeTeam:'England',awayTeam:'Italy', homeGoals:0, awayGoals:9};
+        table.updateTable(match2);
+        table.sort();
 
         /*
         ┌─────────┬───────────────┬───────────────────┬─────────────┬──────────┬────────────┬───────────┬──────────┬──────────────┬────────────────┬────────┐
         │ (index) │ tablePosition │       team        │ gamesPlayed │ gamesWon │ gamesDrawn │ gamesLost │ goalsFor │ goalsAgainst │ goalDifference │ points │
         ├─────────┼───────────────┼───────────────────┼─────────────┼──────────┼────────────┼───────────┼──────────┼──────────────┼────────────────┼────────┤
-        │    0    │       1       │     'England'     │      8      │    5     │     1      │     2     │    21    │      12      │       9        │   16   │
-        │    1    │       2       │     'Ukraine'     │      8      │    5     │     1      │     2     │    19    │      10      │       9        │   16   │
+        │    0    │       1       │     'England'     │      8      │    5     │     1      │     2     │    19    │      14      │       5        │   16   │
+        │    1    │       2       │     'Ukraine'     │      8      │    5     │     1      │     2     │    13    │      8       │       5        │   16   │
 
         */
        
-        table = getTable();
-
-        const newEnglandRow = table.find((row) => row.team === 'England');
-        const newUkraineRow = table.find((row) => row.team === 'Ukraine');
+        const newEnglandRow = table.tableRows.find((row) => row.team === 'England');
+        const newUkraineRow = table.tableRows.find((row) => row.team === 'Ukraine');
         expect(newUkraineRow.goalDifference).to.be.equal(newEnglandRow.goalDifference);
         expect(newEnglandRow.goalsFor).to.be.greaterThan(newUkraineRow.goalsFor);
-        expect(newEnglandRow.tablePosition).to.be.equal(1);
-        expect(newUkraineRow.tablePosition).to.be.equal(2);
+        expect(table.getTablePosition('England')).to.be.equal(1);
+        expect(table.getTablePosition('Ukraine')).to.be.equal(2);
+
 
         const match3 = {homeTeam:'England',awayTeam:'Italy', homeGoals:0, awayGoals:0};
-        updateTable(match3);
+        table.updateTable(match3);
         const match4 = {homeTeam:'Ukraine',awayTeam:'Italy', homeGoals:10, awayGoals:10};
-        updateTable(match4);
-
+        table.updateTable(match4);
+        table.sort();
+        
          /*
         (index) │ tablePosition │       team        │ gamesPlayed │ gamesWon │ gamesDrawn │ gamesLost │ goalsFor │ goalsAgainst │ goalDifference │ points │
         ├─────────┼───────────────┼───────────────────┼─────────────┼──────────┼────────────┼───────────┼──────────┼──────────────┼────────────────┼────────┤
@@ -135,8 +153,8 @@ describe('adding matches', () => {
 
         expect(newUkraineRow.goalDifference).to.be.equal(newEnglandRow.goalDifference);
         expect(newEnglandRow.goalsFor).to.be.lessThan(newUkraineRow.goalsFor);
-        expect(newEnglandRow.tablePosition).to.be.equal(2);
-        expect(newUkraineRow.tablePosition).to.be.equal(1);
+        expect(table.getTablePosition('England')).to.be.equal(2);
+        expect(table.getTablePosition('Ukraine')).to.be.equal(1);
 
        
         
