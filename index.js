@@ -59,7 +59,7 @@ class Table {
 
         this.tableRows.sort((a,b) => b.points - a.points); 
         
-        let tiedIndices = this.findTeamsTiedOnSamePoints(this);
+        let tiedIndices = this.findTeamsTied();
 
         tiedIndices.forEach((tie) => {
             if(tie.length === 1)
@@ -118,31 +118,25 @@ class Table {
         
     }
 
-    findTeamsTiedOnSamePoints = (table,tieBreakers=['points']) => {
+    findTeamsTied = (tieBreakers=['points']) => {
         let ties = [];
         let temp = [0];
         
         const isTied = (i) => {
-            let rowA = table.tableRows[i];
-            let rowB = table.tableRows[i-1];
-            let tied = true;
+            let rowA = this.tableRows[i];
+            let rowB = this.tableRows[i-1];
 
             for(let j=0; j<tieBreakers.length;j++){
                 if(!(rowA[tieBreakers[j]] === rowB[tieBreakers[j]])){
                     return false;
                 }
             }
-                
-                    
-           
-
             return true;
         }
 
-        //find teams tied on same points
-        for(let i=1; i<table.tableRows.length; i++){
+        for(let i=1; i<this.tableRows.length; i++){
             
-            while(i < table.tableRows.length && isTied(i)){//table.tableRows[i].points === table.tableRows[i-1].points){    //
+            while(i < this.tableRows.length && isTied(i)){
                 temp.push(i);
                 i++;
             }
@@ -151,7 +145,7 @@ class Table {
             ties.push(temp);
             temp = [i];
             
-            if(!temp.includes[i] && i === table.tableRows.length-1)
+            if(!temp.includes[i] && i === this.tableRows.length-1)
                 ties.push([i])
         }
     
@@ -161,31 +155,7 @@ class Table {
             return [];
     }
 
-    findTeamsTiedOnSamePointsGoalDiffAndGoalsFor = (table) => {
-        let ties = [];
-        let temp = [0];
-        
-        //find teams tied on same points
-        for(let i=1; i<table.tableRows.length; i++){
-            
-            while(i < table.tableRows.length && table.tableRows[i].points === table.tableRows[i-1].points){
-                temp.push(i);
-                i++;
-            }
-            
-            
-            ties.push(temp);
-            temp = [i];
-            
-            if(!temp.includes[i] && i === table.tableRows.length-1)
-                ties.push([i])
-        }
     
-        if(ties.length > 0)
-            return ties;
-        else
-            return [];
-    }
 
     handleH2H = (indices) => {
         
@@ -207,8 +177,8 @@ class Table {
             subGroupSortedIndices.push(indices[subGroupTeams.findIndex((team) => row.team === team)]);
         } )
         
-        teamsTiedAfterH2H = this.findTeamsTiedOnSamePoints(subGroup,['points','goalDifference','goalsFor']);
-        
+        teamsTiedAfterH2H = subGroup.findTeamsTied(['points','goalDifference','goalsFor']);
+
         if(teamsTiedAfterH2H.length === subGroupSortedIndices.length)
             return subGroupSortedIndices;
         else 
