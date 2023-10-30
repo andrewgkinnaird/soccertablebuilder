@@ -3,6 +3,7 @@
 class Table {
     playedMatches = [];
     matches = [];
+    futureMatches = [];
     sortRules = [];
     tableRows = [];
     tableRowTemplate = {
@@ -19,9 +20,10 @@ class Table {
 
     teams = [];
 
-    constructor(teams,matches,rules){
+    constructor(teams,matches,futureMatches){
         this.teams = teams;
         this.matches = matches;
+        this.futureMatches = futureMatches;
     }
 
     getTable(){
@@ -198,6 +200,25 @@ class Table {
     getTablePosition(team){
         const index = this.tableRows.findIndex((row) => row.team === team );
         return  index + 1;
+    }
+
+    simulate(runs){
+        const winners = new Map();
+
+        for(let i=0; i<runs; i++){
+            this.initTable();
+            this.futureMatches.forEach((match) => {
+                const homeGoals = Math.floor(4 * Math.random());
+                const awayGoals = Math.floor(4 * Math.random());
+                match.homeGoals = homeGoals;
+                match.awayGoals = awayGoals;
+                this.updateTable(match);
+                this.sortWithoutH2H();
+            });
+            const winner = this.tableRows[2].team;
+            winners.set(winner, (winners.get(winner) || 0) + 1); 
+        }
+        console.table(winners);
     }
 
 }

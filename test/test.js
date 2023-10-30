@@ -19,7 +19,14 @@ const matches = [
     {homeTeam:'Italy',awayTeam:'Malta',date:new Date("2023-14-10T20:45:00"),homeGoals:4,awayGoals:0},
     {homeTeam:'England',awayTeam:'Italy',date:new Date("2023-17-10T20:45:00"),homeGoals:3,awayGoals:1},
     {homeTeam:'Malta',awayTeam:'Ukraine',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:3}
-]   
+]
+const futureMatches = [
+    {homeTeam:'Italy',awayTeam:'North Macedonia',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null},
+    {homeTeam:'England',awayTeam:'Malta',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null},
+    {homeTeam:'North Macedonia',awayTeam:'England',date:new Date("2023-20-11T20:45:00"),homeGoals:null,awayGoals:null},
+    {homeTeam:'Ukraine',awayTeam:'Italy',date:new Date("2023-20-11T20:45:00"),homeGoals:null,awayGoals:null},
+    
+]
 
 describe('adding matches', () => {
 
@@ -158,5 +165,12 @@ describe('adding matches', () => {
 
        
         
+    })
+
+    it('should simulate future matches', () => {
+        const table = new Table(teams,matches,futureMatches);
+        table.initTable();
+        table.simulate(100000);
+        table.displayTable();
     })
 })
