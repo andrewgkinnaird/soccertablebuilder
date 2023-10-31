@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const {initTable,getTable,displayTable, updateTable, exportedForTesting, Table} = require('../index');
+const {Table} = require('../index');
 
 const teams = ['England','Italy','North Macedonia','Ukraine','Malta'];
 const matches = [
@@ -21,14 +21,13 @@ const matches = [
     {homeTeam:'Malta',awayTeam:'Ukraine',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:3}
 ]
 const futureMatches = [
-    {homeTeam:'Italy',awayTeam:'North Macedonia',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null},
-    {homeTeam:'England',awayTeam:'Malta',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null},
-    {homeTeam:'North Macedonia',awayTeam:'England',date:new Date("2023-20-11T20:45:00"),homeGoals:null,awayGoals:null},
-    {homeTeam:'Ukraine',awayTeam:'Italy',date:new Date("2023-20-11T20:45:00"),homeGoals:null,awayGoals:null},
-    
+    {homeTeam:'Italy',awayTeam:'North Macedonia',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.6,drawChance:0.25,awayChance:0.15},
+    {homeTeam:'England',awayTeam:'Malta',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.92,drawChance:0.07,awayChance:0.01},
+    {homeTeam:'North Macedonia',awayTeam:'England',date:new Date("2023-20-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.15,drawChance:0.25,awayChance:0.6},
+    {homeTeam:'Ukraine',awayTeam:'Italy',date:new Date("2023-20-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.25,drawChance:0.3,awayChance:0.45},
 ]
 
-describe('adding matches', () => {
+describe('updating tables', () => {
 
     it('should update table object when supplied a new match score', () => {
         const table = new Table(teams,matches);
@@ -167,10 +166,76 @@ describe('adding matches', () => {
         
     })
 
-    it('should simulate future matches', () => {
+    
+
+    
+})
+
+describe('simulations', () => {
+    it('should simulate future matches for Euro2024 Group C', () => {
         const table = new Table(teams,matches,futureMatches);
         table.initTable();
-        table.simulate(100000);
-        table.displayTable();
+        const results = table.simulateTable(50000,[1,2]);
+        expect(results).to.be.a('array');
+        expect(results.some((result) => result.team === 'England')).to.be.true;
+        expect(results.some((result) => result.team === 'Italy')).to.be.true;
+        expect(results.some((result) => result.team === 'Ukraine')).to.be.true;
+        expect(results.find((result) => result.team === 'England').probability).to.be.approximately(100,1);
+        expect(results.find((result) => result.team === 'Italy').probability).to.be.approximately(55,1);
+        expect(results.find((result) => result.team === 'Ukraine').probability).to.be.approximately(45,1);
+        expect(results.find((result) => result.team === 'England').odds).to.be.approximately(1,0.01);
+        expect(results.find((result) => result.team === 'Italy').odds).to.be.approximately(1.8,0.1);
+        expect(results.find((result) => result.team === 'Ukraine').odds).to.be.approximately(2.2,0.1);
+       
+    })
+
+    it('should simulate future matches for Euro2024 Group E', () => {
+        const teams2 = ['Albania','Czech Republic','Poland','Moldova','Faroe Islands'];
+        const matches2 = [
+            {homeTeam:'Czech Republic',awayTeam:'Poland',date:new Date("2023-17-10T20:45:00"),homeGoals:3,awayGoals:1},
+            {homeTeam:'Moldova',awayTeam:'Faroe Islands',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:1},
+            {homeTeam:'Moldova',awayTeam:'Czech Republic',date:new Date("2023-17-10T20:45:00"),homeGoals:0,awayGoals:0},
+            {homeTeam:'Poland',awayTeam:'Albania',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:0},
+            {homeTeam:'Albania',awayTeam:'Moldova',date:new Date("2023-17-10T20:45:00"),homeGoals:2,awayGoals:0},
+            {homeTeam:'Faroe Islands',awayTeam:'Czech Republic',date:new Date("2023-17-10T20:45:00"),homeGoals:0,awayGoals:3},
+            {homeTeam:'Faroe Islands',awayTeam:'Albania',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:3},
+            {homeTeam:'Moldova',awayTeam:'Poland',date:new Date("2023-17-10T20:45:00"),homeGoals:3,awayGoals:2},
+            {homeTeam:'Czech Republic',awayTeam:'Albania',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:1},
+            {homeTeam:'Poland',awayTeam:'Faroe Islands',date:new Date("2023-17-10T20:45:00"),homeGoals:2,awayGoals:0},
+            {homeTeam:'Faroe Islands',awayTeam:'Moldova',date:new Date("2023-17-10T20:45:00"),homeGoals:0,awayGoals:1},
+            {homeTeam:'Albania',awayTeam:'Poland',date:new Date("2023-17-10T20:45:00"),homeGoals:2,awayGoals:0},
+            {homeTeam:'Albania',awayTeam:'Czech Republic',date:new Date("2023-17-10T20:45:00"),homeGoals:3,awayGoals:0},
+            {homeTeam:'Faroe Islands',awayTeam:'Poland',date:new Date("2023-17-10T20:45:00"),homeGoals:0,awayGoals:2},
+            {homeTeam:'Czech Republic',awayTeam:'Faroe Islands',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:0},
+            {homeTeam:'Poland',awayTeam:'Moldova',date:new Date("2023-17-10T20:45:00"),homeGoals:1,awayGoals:1},
+            
+        ]
+        const futureMatches2 = [
+            {homeTeam:'Moldova',awayTeam:'Albania',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.25,drawChance:0.30,awayChance:0.45},
+            {homeTeam:'Poland',awayTeam:'Czech Republic',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.3,drawChance:0.4,awayChance:0.3},
+            {homeTeam:'Albania',awayTeam:'Faroe Islands',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.85,drawChance:0.1,awayChance:0.05},
+            {homeTeam:'Czech Republic',awayTeam:'Moldova',date:new Date("2023-17-11T20:45:00"),homeGoals:null,awayGoals:null,homeChance:0.5,drawChance:0.25,awayChance:0.25},
+        ];
+
+        const table = new Table(teams2,matches2,futureMatches2);
+        table.initTable();
+        const results = table.simulateTable(50000,[1]);
+        expect(results).to.be.a('array');
+        expect(results.some((result) => result.team === 'Albania')).to.be.true;
+        expect(results.some((result) => result.team === 'Czech Republic')).to.be.true;
+        expect(results.some((result) => result.team === 'Moldova')).to.be.true;
+        expect(results.find((result) => result.team === 'Albania').probability).to.be.approximately(92,1);
+        expect(results.find((result) => result.team === 'Czech Republic').probability).to.be.approximately(6,1);
+        expect(results.find((result) => result.team === 'Moldova').probability).to.be.approximately(1,1);
+        expect(results.find((result) => result.team === 'Albania').odds).to.be.approximately(1.08,0.02);
+        expect(results.find((result) => result.team === 'Czech Republic').odds).to.be.approximately(16,2);
+        expect(results.find((result) => result.team === 'Moldova').odds).to.be.approximately(73,10);
+    })
+
+    describe('loading soccer data into memory', () => {
+        it('should load data from external source',async () => {
+            const table = new Table(teams,matches);
+            await table.getData();
+        })
     })
 })

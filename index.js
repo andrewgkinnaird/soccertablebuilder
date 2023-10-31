@@ -1,5 +1,6 @@
 
 
+
 class Table {
     playedMatches = [];
     matches = [];
@@ -75,7 +76,7 @@ class Table {
         })
 
         this.tableRows = sortedTable;
-        this.displayTable();
+        
         
     }
 
@@ -170,7 +171,7 @@ class Table {
         
         subGroup.initTable();
         subGroup.sortWithoutH2H();
-        subGroup.displayTable();
+        
 
         let subGroupSortedIndices = [];
         let teamsTiedAfterH2H = [];
@@ -202,25 +203,106 @@ class Table {
         return  index + 1;
     }
 
-    simulate(runs){
+    simulateMatch(match){
+        const wheelSpin = Math.random();
+        let homeGoals,awayGoals;
+
+        if(wheelSpin < match.homeChance) // home team wins
+        {
+            homeGoals = Math.floor(4 * Math.random());
+            awayGoals = Math.floor(homeGoals * Math.random());
+        }
+        else if(wheelSpin < match.homeChance + match.drawChance){ // draw
+            homeGoals = Math.floor(4 * Math.random());
+            awayGoals = homeGoals;
+        }
+        else{ // away team wins
+            
+            awayGoals = Math.floor(4 * Math.random());
+            homeGoals = Math.floor(awayGoals * Math.random());
+        }
+       
+        match.homeGoals = homeGoals;
+        match.awayGoals = awayGoals;
+        return match;
+    }
+
+    simulateTable(runs,positions = [1]){
         const winners = new Map();
 
         for(let i=0; i<runs; i++){
             this.initTable();
             this.futureMatches.forEach((match) => {
-                const homeGoals = Math.floor(4 * Math.random());
-                const awayGoals = Math.floor(4 * Math.random());
-                match.homeGoals = homeGoals;
-                match.awayGoals = awayGoals;
-                this.updateTable(match);
+                const result = this.simulateMatch(match);
+                this.updateTable(result);
                 this.sortWithoutH2H();
             });
-            const winner = this.tableRows[2].team;
-            winners.set(winner, (winners.get(winner) || 0) + 1); 
+
+            positions.forEach((position) => {
+                const team = this.tableRows[position-1].team;
+                winners.set(team, (winners.get(team) || 0) + 1); 
+            })
+            
+            
+        }
+        let result = [];
+
+        for(const [key,value] of winners){
+            const percentageChance = (1/runs) * (100 * value);
+            const decimalOdds = (1/percentageChance) * 100;
+            console.log(`${key} has a percentage chance of ${percentageChance}%.  Decimal odds: ${decimalOdds}`);
+            result.push({
+                team:key,
+                probability:percentageChance,
+                odds:decimalOdds
+            })
         }
         console.table(winners);
+        return result;
+    }
+    groups = [
+        {
+            group:'Group A',
+            teams:[
+                'Spain','Scotland','Norway','Georgia','Cyprus'
+            ]
+        }
+    ]
+
+    async getData(){
+        let data = [];
+        const {getData} = require('./soccerData');
+        const rawdata = (await getData());
+        rawdata.forEach((row) => {
+            data.push({
+                homeTeam:row.teams.home.name,
+                awayTeam:row.teams.away.name,
+                homeGoals:row.goals.home,
+                awayGoals:row.goals.away,
+                date:row.fixture.date
+            })
+        })
+        this.filterDataIntoGroups(data);
     }
 
+    filterDataIntoGroups(data){
+        const groupAmatches = [];
+        const groupAfutureMatches = [];
+
+        data.forEach((row) => {
+            if(this.groups[0].teams.includes(row.homeTeam)){
+                if(row.homeGoals !== null)
+                    groupAmatches.push(row);
+                else
+                    groupAfutureMatches.push(row);
+            }
+        })
+        const groupA = new Table(this.groups[0].teams,groupAmatches,groupAfutureMatches);
+        groupA.initTable();
+        groupA.simulateTable(50000,[1]);
+        groupA.simulateTable(50000,[1,2]);
+
+    }
 }
 
 
