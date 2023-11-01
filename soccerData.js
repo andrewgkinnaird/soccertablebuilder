@@ -12,7 +12,7 @@ const  getData = (competition,dates) => {
 
         let config = {
             method: 'get',
-            url: `https://v3.football.api-sports.io/fixtures?season=2023&league=960`,
+            url: `https://v3.football.api-sports.io/fixtures?season=2023&league=39`,
             headers: {
                 'x-rapidapi-key': process.env.API_FOOTBALL_KEY,
                 'x-rapidapi-host': 'v3.football.api-sports.io'

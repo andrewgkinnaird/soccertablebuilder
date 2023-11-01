@@ -332,25 +332,31 @@ class Table {
                 date:row.fixture.date
             })
         })
+        console.log(data);
         this.filterDataIntoGroups(data);
     }
 
     filterDataIntoGroups(data){
         const groupAmatches = [];
         const groupAfutureMatches = [];
+        const teams = new Set();
 
         data.forEach((row) => {
-            if(this.groups[0].teams.includes(row.homeTeam)){
+            if(true){//this.groups[0].teams.includes(row.homeTeam)){
+                teams.add(row.homeTeam);
+
                 if(row.homeGoals !== null)
                     groupAmatches.push(row);
                 else
                     groupAfutureMatches.push(row);
             }
         })
-        const groupA = new Table(this.groups[0].teams,groupAmatches,groupAfutureMatches);
+
+        //const groupA = new Table(this.groups[0].teams,groupAmatches,groupAfutureMatches);
+        const groupA = new Table(teams,groupAmatches,groupAfutureMatches);
         groupA.initTable();
-        groupA.simulateTable(50000,[1]);
-        groupA.simulateTable(50000,[1,2]);
+        //groupA.simulateTable(10000,[1]);
+        groupA.simulateTable(10000,[18,19,20]);
 
     }
 }
@@ -362,3 +368,4 @@ exports.Table = Table;
 exports.exportedForTesting = {
   
 };
+

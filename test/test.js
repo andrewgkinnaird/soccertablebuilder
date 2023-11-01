@@ -232,10 +232,27 @@ describe('simulations', () => {
         expect(results.find((result) => result.team === 'Moldova').odds).to.be.approximately(73,10);
     })
 
+    it.only('should simulate English Premier League', () => {
+        const {englishPremierTeams,futurePremierLeagueMatches,premierLeagueMatches} = require('./testData')
+        const table = new Table(englishPremierTeams, premierLeagueMatches, futurePremierLeagueMatches);
+        table.initTable();
+        /*let results = table.simulateTable(10000,[1]);
+        console.log('winner',results);
+        results = table.simulateTable(10000,[1,2,3,4]);
+        console.log('top 4',results);
+        results = table.simulateTable(10000,[18,19,20]);
+        console.log('relegation',results);
+        results = table.simulateTable(10000,[20]);
+        console.log('bottom',results);*/
+        results = table.simulateTable(10000,[1,2,3,4,5,6,7,8,9,10]);
+        console.log('top ten',results);
+        
+    })
+    /*
     describe('loading soccer data into memory', () => {
         it('should load data from external source',async () => {
             const table = new Table(teams,matches);
             await table.getData();
         })
-    })
+    })*/
 })
