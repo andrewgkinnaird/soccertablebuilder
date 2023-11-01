@@ -23,7 +23,7 @@ const  getData = (competition,dates) => {
         .then(function (response) {
             //thirdPartyAPiCallsRemaining = response.headers["x-ratelimit-requests-remaining"];
             //systemEventLog.log(`${response.data.response.length} games retrieved from 3rd-party site. ${thirdPartyAPiCallsRemaining} api calls remaining.`);
-            console.table(response.data.response);
+           
             return resolve(response.data.response);
         })
         .catch(function (error) {

@@ -204,6 +204,9 @@ class Table {
     }
 
     simulateMatch(match){
+        if(!match.homeChance)
+            return this.simulatePoissonMatch(match);
+
         const wheelSpin = Math.random();
         let homeGoals,awayGoals;
 
@@ -227,6 +230,40 @@ class Table {
         return match;
     }
 
+    simulatePoissonMatch(match){
+        const homeGoalsFor = this.tableRows.find((row) => row.team === match.homeTeam).goalsFor;
+        const homeGoalsAgainst = this.tableRows.find((row) => row.team === match.homeTeam).goalsAgainst;
+        const awayGoalsFor = this.tableRows.find((row) => row.team === match.awayTeam).goalsFor;
+        const awayGoalsAgainst = this.tableRows.find((row) => row.team === match.awayTeam).goalsAgainst;
+        const homeGamesPlayed = this.tableRows.find((row) => row.team === match.homeTeam).gamesPlayed;
+        const awayGamesPlayed = this.tableRows.find((row) => row.team === match.awayTeam).gamesPlayed;
+
+        const homeLambda = (homeGoalsFor + awayGoalsAgainst) / (homeGamesPlayed + awayGamesPlayed);
+        const awayLambda = (awayGoalsFor + homeGoalsAgainst) / (homeGamesPlayed + awayGamesPlayed);
+        const homeGoals = this.generatePoisson(homeLambda);
+        const awayGoals = this.generatePoisson(awayLambda);
+
+        match.homeGoals = homeGoals;
+        match.awayGoals = awayGoals;
+
+        return match;
+
+
+    }
+
+    generatePoisson = (lambda) => {
+        const L = Math.exp(-lambda);
+        let k = 0;
+        let p = 1;
+      
+        do {
+          k++;
+          p *= Math.random();
+        } while (p > L);
+      
+        return k - 1;
+    }
+
     simulateTable(runs,positions = [1]){
         const winners = new Map();
 
@@ -235,8 +272,10 @@ class Table {
             this.futureMatches.forEach((match) => {
                 const result = this.simulateMatch(match);
                 this.updateTable(result);
-                this.sortWithoutH2H();
+                //this.sortWithoutH2H();
             });
+
+            this.sort();
 
             positions.forEach((position) => {
                 const team = this.tableRows[position-1].team;
@@ -262,9 +301,20 @@ class Table {
     }
     groups = [
         {
+            /*
             group:'Group A',
             teams:[
                 'Spain','Scotland','Norway','Georgia','Cyprus'
+            ]
+
+            group: 'Group E',
+            teams:[
+                'Moldova','Albania','Czech Republic','Poland','Faroe Islands'
+            ] */
+
+            group: 'Group C',
+            teams:[
+                'England','Italy','Ukraine','FYR Macedonia','Malta'
             ]
         }
     ]
